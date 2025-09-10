@@ -1,0 +1,356 @@
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Vežba 11: Multipleksiranje operacija
+
+zasnovano na događajima, slanje složenih
+tipova podatka, programsko pokretanje više
+klijenata
+U prethodnoj vežbi upoznali smo neblokirajući režim rada utičnica, koji omogućava da se
+izbegne blokiranje programa ako operacija nad utičnicom nije spremna da se izvrši. Međutim,
+teško je bilo odrediti kada je pravi trenutak za novi pokušaj. Zbog toga se periodično iznova
+pokušava izvršiti operacija trošeći procesorsko vreme.
+
+Metoda Socket.Select omogućava praćenje stanja čitanja, pisanja i grešaka na više utičnica
+odjednom, omogućavajući pravovremenu reakciju na događaje od interesa. Na ovaj način se
+izbegava potreba za periodičnim proverama stanja objekata od interesa. Na primer, kod TCP
+servera može se istovremeno čekati na prispeće poruka od konektovanih klijenata i na nove
+zahteve za uspostavom konekcije.
+program: javi mi kada budeš mogao
+poslatiove podatke
+socket: naravno, sačekaj
+...
+...
+socket: pokušaj sada poslati
+program: pošalji mi ove podatke
+socket: poslao!
+
+Select model
+1
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Select model
+
+Funkcija Socket.Select omogućava praćenje utičnica za čitanje, pisanje i greške, koristeći tri
+različite kolekcije utičnica.
+Metoda Socket.Select ima sledeću deklaraciju:
+public static void Select(IList checkRead, IList checkWrite, IList checkError, int
+microSeconds);
+
+Funkcija:
+
+Opis:
+
+Select
+
+Omogućava praćenje utičnica za čitanje, pisanje
+i greške, koristeći tri različite kolekcije utičnica.
+
+Parametri:
+
+Opis:
+checkRead[IList] Lista utičnica koje se proveravaju za mogućnost čitanja
+(Socket.Receive, Socket.Accept).
+checkWrite[IList] Lista utičnica koje se proveravaju za mogućnost pisanja
+(Socket.Send, Socket.Connect).
+checkError[IList] Lista utičnica koje se proveravaju za greške.
+microSeconds[int] Maksimalno vreme čekanja u mikrosekundama. Ako se
+postavi na 0, funkcija se ne blokira i odmah vraća
+rezultat. Ako se postavi na -1, funkcija će čekati
+neograničeno dugo dok se neki događaj ne dogodi.
+
+Može se primetiti da postoje tri liste: jedna za praćenje čitanja (checkRead), jedna za praćenje
+pisanja (checkWrite) i jedna za praćenje grešaka (checkError). Ovi ulazno-izlazni parametri
+predstavljaju skup utičnica za koje je potrebno pratiti određeni status. Nakon registrovanja
+događaja od interesa, metoda Socket.Select će u ovim listama ostaviti samo one utičnice na
+kojima su događaji zabeleženi.
+Na ovaj način, moguće je saznati koji se događaj desio tako što ćemo proveriti da li utičnica i
+dalje postoji u odgovarajućoj listi nakon izvršenja metode Select. Na primer, ako je potrebno
+proveriti mogućnost čitanja nad utičnicom, dovoljno je dodati utičnicu u listu checkRead pre
+poziva metode Select. Nakon poziva, ako se utičnica i dalje nalazi u ovoj listi, možemo zaključiti
+da je spremna za operaciju čitanja.
+Ovo omogućava da se na osnovu rezultata metode Socket.Select odmah započne
+odgovarajuća operacija. Na primer, za operaciju čitanja može se odmah pozvati metoda
+Receive, ako je utičnica označena kao spremna za čitanje. Na taj način se izbegava nepotrebno
+blokiranje i efikasno koristi procesorsko vreme.
+
+2
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Alogritam za multipleksiranje operacija koje je zasnovano na
+događajima
+1. Postavljanje soketa u neblokirajući režim
+listenSocket.Blocking = false; // Postavi soket u neblokirajući režim
+
+2. Inicijalizacija kolekcija za praćenje
+Koristi se generička lista (List<Socket>) za praćenje utičnica.
+List<Socket> readSockets = new List<Socket>();
+readSockets.Add(clientSocket); // Dodajemo klijentsku utičnicu
+
+3. Poziv metode Select za praćenje događaja
+Socket.Select se poziva sa željenim listama i vremenom čekanja.
+Socket.Select(readSockets, null, null, 1000000); // Čekamo do 1 sekunde
+
+4. Provera rezultata poziva Select metode
+Nakon poziva metode Select, ako je utičnica spremna za čitanje, lista readSockets će i
+dalje sadržati tu utičnicu.
+if (readSockets.Count > 0)
+{
+// Spremno za čitanje
+byte[] buffer = new byte[256];
+int bytesRead = clientSocket.Receive(buffer);
+string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+Console.WriteLine("Primljena poruka: " + message);
+}
+else
+{
+Console.WriteLine("Vreme čekanja je isteklo, nema događaja.");
+}
+
+5. Čišćenje kolekcija za novu iteraciju
+Pre nove iteracije, kolekcije se prazne ili se resetuju za ponovno praćenje.
+readSockets.Clear(); // Očisti listu za sledeću iteraciju
+readSockets.Add(clientSocket); // Ponovo dodaj klijentsku utičnicu
+
+3
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Kompletni primer u .NET-u:
+// Postavljanje utičnice u neblokirajući režim
+Socket listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+ProtocolType.Tcp);
+listenSocket.Bind(new IPEndPoint(IPAddress.Any, 51000));
+listenSocket.Listen(10);
+Socket clientSocket = listenSocket.Accept();
+clientSocket.Blocking = false; // Neblokirajući režim
+while (true)
+{
+// Inicijalizacija kolekcije za praćenje događaja
+List<Socket> readSockets = new List<Socket> { clientSocket };
+// Poziv metode Select sa timeoutom od 1 sekunde
+Socket.Select(readSockets, null, null, 1000000);
+// Provera rezultata Select metode
+if (readSockets.Count > 0)
+{
+byte[] buffer = new byte[256];
+int bytesRead = clientSocket.Receive(buffer);
+string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+Console.WriteLine("Primljena poruka: " + message);
+}
+else
+{
+Console.WriteLine("Vreme čekanja je isteklo, nema događaja.");
+}
+
+}
+
+// Čišćenje seta za novu iteraciju
+readSockets.Clear();
+
+Ovaj primer koristi metodologiju zasnovanu na događajima za praćenje TCP utičnice, uz
+izbegavanje neefikasnog trošenja procesorskog vremena i omogućavanje paralelne obrade
+drugih zadataka dok čekamo na događaj.
+
+Slanje složenih tipova podataka
+Za slanje složenih tipova podataka (i kolekcija: listi, nizova...), kako bi se oni pretvorili u niz
+bajtova koji odgovara parametrima funkcija za slanje, odnosno prevođenje primljenih podataka
+u originalne tipove, koristiće se klase MemoryStream i BinaryFormatter.
+Klasa MemoryStream predstavlja način da se podaci čuvaju direktno u memoriji, umesto u
+datoteci ili kao resurs, što može korisno kada se manipulacija nad podacima radi u memoriji i ne
+koristi ulazno/izlazne operacije. Ona implementira IDisposable interfejs koji nudi mogućnost
+oslobađanja zauzetih resursa, iako sam MemoryStream nema resurse koje je potrebno
+osloboditi.
+4
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Klasa BinaryFormatter omogućava serijalizaciju i deserijalizaciju objekata:
+ Serijalizacija predstavlja proces konverzije objekata u binarni format. Objekat klase koji
+se serijalizuje mora imati atribut [Serializable] nad svojom klasom.
+using (MemoryStream ms = new MemoryStream())
+{
+BinaryFormatter bf = new BinaryFormatter();
+bf.Serializer(ms, objekat);
+dataBuffer = ms.ToArray();
+}
+
+ Deserijalizacija predstavlja proces konverzije binarnog formata bajtova u originalni
+objekat.
+
+using (MemoryStream ms = new MemoryStream(dataBuffer))
+{
+BinaryFormatter bf = new BinaryFormatter();
+Klasa objekat = (Klasa)bf.Deserializer(ms);
+}
+
+Liste i nizovi se mogu serijalizovati sa elementima koji su opšti tipovi, ali za složenije, se mora
+navoditi atribut [Serializable] (strukture i klase).
+
+Programsko pokretanje više klijenata
+
+Za programsko pokretanje više klijenata, koristi se C# klasa Process, koja pripada biblioteci
+System.Diagnostics i omogućava pokretanje i zaustavljanje sistemskih procesa. Kao svojstvo
+naziva procesa koji se pokreće se navodi konkretan klijent. Za porketanje samog procesa, nad
+njim se poziva metoda Start.
+static void PokreniKlijente(int brojKlijenata)
+{
+for (int i = 0; i < brojKlijenata; i++)
+{
+// Putanja do izvršnog fajla klijenta (potrebno je kompajlirati ga)
+string clientPath = @"C:\..\UDPClient.exe";
+Process klijentProces = new Process(); // Stvaranje novog procesa
+klijentProces.StartInfo.FileName = clientPath; //Zadavanje putanje za pokretanje
+klijentProces.StartInfo.Arguments = $"{i + 1}"; // Argument - broj klijenta
+klijentProces.Start(); // Pokretanje klijenta
+Console.WriteLine($"Pokrenut klijent #{i + 1}");
+}
+}
+
+5
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Zadatak 1
+Nadograditi implementacije UDP klijenta i servera sa osmih vežbi i omogućiti na serveru
+multipleksiranje operacija čitanja poruka sa mreže i praćenje grešaka zasnovano na
+događajima.
+1. Na serveru napraviti dve UDP utičnice i povezati ih sa adresama i portovima koji su dati
+u nastavku:
+ serverSocket1
+o IP adresa: sve dostupne adrese
+o Port: 15011
+ serverSocket2
+o IP adresa: 127.0.0.1
+o Port: 15012
+2. Obezbediti neblokirajući režim izvršavanja operacija nad serverskim utičnicama.
+3. Kreirati listu checkRead za operacije čitanja, inicijalizovati je i dodati odgovarajuće
+utičnice u listu.
+4. Omogućiti istovremeno čekanje prispeća paketa na obe serverske utičnice
+korišćenjem metode Socket.Select. Nakon izvršenja Select metode, proveriti koliko
+događaja se desilo i da li se desila greška prilikom poziva funkcije.
+5. Ukoliko je pristigao paket na neku od utičnica, proveriti na koju od njih je stigao paket i
+pozvati funkciju koja će omogućiti njegov prijem. Ispisati sadržaj primljene poruke.
+6. Omogućiti klijentu da može poslati više poruka serveru. Ukoliko klijent unese “end”
+potrebno je prekinuti rad klijenta.
+7. Na klijentskoj strani, potrebno je učitati port servera iz komandne linije, kako bi bilo
+moguće da se sa različitih klijenata koriste različiti portovi servera (15011 i 15012).
+Napomena: Konverziju stringa u broj moguće je realizovati korišćenjem int.Parse()
+funkcije.
+8. Uz multipleksiranje operacija čitanja poruka, omogućiti na serverskim utičnicama i
+praćenje statusa grešaka zasnovano na događajima.
+ Kreirati listu checkError za praćenje grešaka, inicijalizovati je i dodati odgovarajuće
+utičnice u nju.
+ Uz pomoć Socket.Select funkcije pratiti operacije čitanja poruka i status grešaka
+na utičnicama.
+ Nakon izvršenja Select metode, proveriti da li se na nekoj utičnici desila greška.
+Ako jeste, zatvoriti datu utičnicu.
+
+6
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 11: Multipleksiranje operacija
+zasnovano na događajima
+
+Zadatak 2
+Nadograditi implementacije TCP klijenta i servera sa osmih vežbi i omogućiti na serveru
+multipleksiranje operacija čitanja poruka sa mreže i praćenje grešaka zasnovano na
+događajima.
+1. Obezbediti neblokirajući režim izvršavanja operacija nad serverskom utičnicom koja služi
+za prijem zahteva za uspostavu veze sa serverom.
+2. Kreirati listu checkRead za operacije čitanja, inicijalizovati je i dodati utičnicu za prijem
+konekcija u listu.
+3. Omogućiti čekanje novih konekcija na utičnici korišćenjem Socket.Select funkcije.
+Maksimalni interval čekanja podesiti na 1 sekundu.
+4. Nakon izvršenja Select funkcije, proveriti koliko događaja se desilo i da li se desila greška
+prilikom poziva funkcije.
+o Ukoliko se desila greška, zaustaviti rad servera.
+o Ukoliko se nije desio događaj, nastaviti sa čekanjem događaja.
+o U suprotnom, ispisati broj događaja koji se dogodio.
+5. Proveriti da li događaj predstavlja zahtev za uspostavom konekcije. Prihvatiti konekciju i
+ispisati port i adresu klijenta koji je poslao zahtev.
+6. Obezbediti neblokirajući režim izvršavanja operacija nad utičnicom dodeljenom klijentu.
+Nakon toga omogućiti čekanje novih događaja.
+7. Umesto jedne utičnice, deklarisati niz od 3 utičnice i brojač koji će pamtiti koja je
+poslednja utičnica dodeljena novom klijentu. Prilikom prihvatanja veze, utičnica dodeljena
+klijentu smešta se u prvo slobodno mesto u nizu utičnica.
+8. U listu checkRead, u kojoj se nalazi utičnica za prijem novih konekcija, potrebno je dodati
+i utičnice svih klijenata koji su se konektovali na server, kako bi se metodom Select
+moglo osluškivati prispeće poruka na njih.
+9. Nakon izvršenja Select metode, omogućiti proveru da li je stigla poruka na nekoj od
+utičnica dodeljenih klijentima. Ukoliko jeste, primiti poruku i ispisati je na ekran.
+10. Na klijentskoj strani omogućiti slanje poruka sve dok klijent ne izabere opciju da prestane
+sa slanjem poruka.
+11. Omogućiti da klijent, u okviru jedne poruke, pošalje:
+o ime i prezime studenta i
+o broj poena osvojenih na testu. Kreirati odgovarajuću klasu za ove podatke i
+poslati je u okviru poruke.
+12. Kada poruka stigne na server, ispisati je u sledećem formatu:
+Ime i prezime: Dragan Jovanović
+Poeni: 40
+
+13. Omogućiti prijem zahteva za prekid veze od klijenata i, u tom slučaju, poravnati utičnice
+7
+
+Primenjeno softversko inženjerstvo
+Vežba 11: Multipleksiranje operacija
+Primena računarskih mreža u IS
+zasnovano na događajima
+u nizu tako da se stvori slobodno mesto na kraju i umanjiti brojač zauzetih utičnica. Isto
+poravnanje uraditi i u slučaju greške prilikom prijema poruke.
+14. U konzoli servera ispisati ime predmeta i studijsku godinu ukoliko se, u toku čekanja
+događaja, pritisne bilo koja tipka na tastaturi. Iskoristiti povratnu vrednost Select funkcije
+(koja ukazuje na istekao period čekanja) i Console.ReadKey, koja prikuplja vrednost
+pritisnutog tastera.
+15. Pri prekidu rada servera, poslati poruku o završetku veze svim konektovanim klijentima, a
+zatim zatvoriti konekciju i prekinuti rad servera i klijenata.
+16. Sprečiti prihvatanje novih konekcija ako su već uspostavljene 3 veze sa klijentima. U tom
+slučaju, u listi za Select više ne treba da se nalazi utičnica za nove konekcije.
+17. (Napredno) Podrazumevano, operativni sistem automatski prihvata konekciju ako je
+zahtev za vezu upućen utičnici u stanju slušanja, čak i pre nego što server pozove
+Accept. Da bi se ovo izbeglo, može se koristiti opcija SO_CONDITIONAL_ACCEPT.
+Testirati ovu mogućnost i proveriti razliku.
+bool bOptVal = true;
+int bOptLen = sizeof(bool);
+iResult = listenSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ConditionalAccept,
+bOptVal);
+if (iResult == SocketError.SocketError)
+{
+Console.WriteLine("SetSocketOption for SO_CONDITIONAL_ACCEPT failed with error: {0}",
+listenSocket.GetSocketError());
+}
+
+Od svakog studenta očekuje se da razume gradivo koje je korišćeno prilikom izrade ovog zadatka.
+On predstavlja izazov jer sadrži znatno više pod-zadataka nego što će biti dato na projektu, sa ciljem da se
+objedini svo znanje iz ove oblasti.
+
+8
+
+

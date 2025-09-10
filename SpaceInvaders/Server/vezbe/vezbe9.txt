@@ -1,0 +1,483 @@
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+Vežba 9: Transmission Control
+Protocol (TCP)
+Teorijski uvod
+Transport Control Protocol (TCP) predstavlja protokol transportnog nivoa koji nudi uslugu
+pouzdane isporuke toka (engl. Stream) korisničkih podataka.
+U nastavku su date osnovne osobine TCP-a:
+ Komunikacija je realizovana u vidu konekcije koja se uspostavlja pomoću metode
+rukovanja (engl. Handshaking). Iz tog razloga, ovaj protokol podržava samo unicast
+komunikaciju.
+ Pruža pouzdan prenos toka bajtova (byte stream) i prijem po redosledu slanja.
+ Obavlja kontrolu toka podataka. Kontrola toka je realizovana tako što prijemnik oglašava
+količinu podataka koju je spreman da primi (polje window u zaglavlju).
+ Obezbeđuje dvosmerni prenos podataka (full-duplex) po konekciji.
+ Osnovna jedinica prenosa TCP-a je segment podataka. Segmenti se koriste za prenos
+upravljačke informacije (npr. poruke za uspostavu i raskid veze), ili za prenos podataka.
+
+32 bita
+
+←
+
+→
+
+SOURCE PORT
+
+DESTINATION PORT
+SEQUENCE NUMBER
+ACKNOWLEDGEMENT NUMBER
+WINDOW
+HEADER LENGTH,
+RESERVED,
+CONTROL BITS
+CHECKSUM
+URGENT POINTER
+OPTIONS (IF ANY)
+APPLICATION DATA
+Slika 1 - Izgled TCP segmenta
+
+1
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+Na slici 1. je dat prikaz TCP segmenta, koji se sastoji iz zaglavlja i dela u kome se nalaze
+podaci. Zaglavlje se sastoji iz sledećih polja:
+•
+
+SOURCE PORT – port izvora identifikuje aplikaciju na izvornom računaru.
+
+•
+
+DESTINATION PORT – port odredišta identifikuje aplikaciju na odredišnom računaru.
+
+•
+
+SEQUENCE NUMBER – redni broj prvog bajta (okteta) u datom segmentu.
+
+•
+
+ACKNOWLEDGEMENT NUMBER – redni broj narednog bajta (okteta) koji se očekujeod
+druge strane. Segmenti koji pristignu van redosleda, u zavisnosti od implementacije,
+mogu se odbaciti ili čuvati.
+
+•
+
+HEADER LENGTH – dužina zaglavlja segmenta (mereno u umnošcima od 32 bita). Ono je
+potrebno pošto dužina polja OPTIONS varira u zavisnosti od izabranih opcija.
+
+•
+
+RESERVED – 6-to bitno polje rezervisano za buduću upotrebu.
+
+•
+
+CONTROL BITS – određuje namenu i sadržaj segmenta, što je prikazano na slici 2.
+Bit (s leva na desno)
+
+Značenje kada je bit postavljen
+
+URG
+
+Polje urgentnog pokazivača je važeće
+
+ACK
+
+Polje potvrde je važeće
+
+PSH
+
+Ovaj segment zahteva operaciju „push“
+
+RST
+
+Resetuj vezu
+
+SYN
+
+Sinhronizuj „sequence“ brojeve
+
+FIN
+
+Pošiljalac je došao do kraja toka podataka
+Slika 2 – Kontrolni biti u TCP zaglavlju
+
+•
+
+WINDOW – veličina prijemnog bafera izražena u umnošcima od 32 bita. Označava broj
+bajtova koje je prijemnik u mogućnosti da primi
+
+•
+
+CHECKSUM – kontrolna suma.
+
+•
+
+URGENT POINTER – pozicija unutar segmenta gde se urgentni podaci završavaju.
+
+•
+
+OPTIONS – odabrane opcije.
+
+2
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+1. Uspostava veze kod TCP utičnica
+Kada aplikacije komuniciraju preko TCP-a, uspostavlja se logička veza između aplikacije na
+izvorišnom računaru i aplikacije na odredišnom računaru. Nakon što se uspostavi veza, podaci
+između dva hosta mogu da se razmenjuju u vidu dvosmernog toka bajtova.
+TCP protokol koristi metodu „trostrukog rukovanja“ („three way handshake“) radi uspostavljanje
+veze.
+1. Klijent inicira zahtev za uspostavu konekcije sa serverom
+o SYN=1 - ukazuje da je postavljena inicijalna vrednost broja sekvence. Ova
+vrednost bira se nasumično, kako bi se otklonila mogućnost interferencije između
+različitih konekcija.
+2. Server odobrava uspostavu konekcije i šalje zahtev za uspostavom konekcije u
+suprotnom smeru
+o ACK=1 - Označava da je server primio i odobrio zahtev za uspostavu veze
+o SYN=1 - Za suprotan smer komunikacije server koristi sopstveni brojač sekvenci,
+koji se takođe inicijalno postavlja na nasumičan broj.
+3. Klijent odobrava uspostavu konekcije u suprotnom smeru
+o ACK=1
+Na slici 3 prikazano je trostruko rukovanje između klijenta i servera neophodno pri uspostavljanju
+TCP veze .
+
+Slika 3 - Uspostavljanje TCP veze
+
+TCP utičnica mora biti povezana sa drugom TCP utičnicom pre nego što se ikakvi podaci mogu
+poslati preko njih.
+U procesu uspostave veze je najveća razlika između klijentske i serverske strane. Klijentska strana
+inicira uspostavu veze, dok serverska strana pasivno čeka klijentske pozive za uspostavu veze,
+kako bi servisirao njihove zahteve. Server mora da osluškuje zahteve zakonekcijom na unapred
+3
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+poznatoj IP adresi (lokalnog) interfejsa i određenom portu.
+
+1.1 Serverska strana
+Na serverskoj strani potrebno je da se koristi niz funkcija iz System.Net.Sockets biblioteke
+kako bi se uspostavila TCP veza sa klijentom. Sledeći koraci su potrebni za postavljanje
+servera:
+1.
+Kreiranje utičnice pomoću klase Socket:
+Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+ProtocolType.Tcp);
+
+2.
+
+Serverska utičnica mora biti povezana sa lokalnom adresom kako bi osluškivala
+zahteve na određenoj adresi i portu. Ovo se postiže korišćenjem metode Bind().
+IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, SERVER_PORT);
+serverSocket.Bind(localEndPoint);
+
+3.
+
+Utičnica se postavlja u "listening" režim kako bi čekala na dolazeće zahteve za
+konekcijom. Ovo se postiže pozivom funkcije Listen(). Parametar SOMAXCONN
+određuje maksimalan broj zahteva koji mogu biti u redu za obradu.
+serverSocket.Listen(SOMAXCONN);
+
+4.
+
+Kada klijent zatraži konekciju, server koristi funkciju Accept() kako bi prihvatio zahtev.
+Socket acceptedSocket = serverSocket.Accept();
+
+4
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+1.2 Klijentska strana
+Klijentska strana zahteva korišćenje nekoliko funkcija iz System.Net.Sockets biblioteke kako bi
+se uspostavila TCP veza sa serverom:
+1.
+
+Koristi se Socket klasa kako bi se kreirala utičnica.
+Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+ProtocolType.Tcp);
+
+2.
+
+Adresa servera i broj porta se postavljaju pomoću klase IPEndPoint.
+IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(SERVER_IP),
+SERVER_PORT);
+
+3.
+
+Veza sa serverom se uspostavlja korišćenjem funkcije Connect().
+clientSocket.Connect(serverEndPoint);
+
+5
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+2. Funkcije za slanje i prijem podataka preko utičnice
+Kada dve TCP utičnice ostvare konekciju, mogu da počnu sa slanjem i prijemom podataka.
+Kao što je ranije rečeno, klijentska strana pozivom Connect() inicira uspostavu konekcije
+i nakon njenog izvršenja dobija konektovanu utičnicu, a serverska strana posle izvršenja
+funkcije Accept()dobija svoju konektovanu utičnicu. Kroz konektovane TCP utičnice,
+komunikacija se odvija pozivom funkcija Send()i Receive().
+
+2.1 Slanje podataka
+Funkcija Send služi za slanje podataka preko utičnice koja je uspostavila vezu sa drugom
+utičnicom. Ova funkcija kao parametar ima deskriptor konektovane utičnice preko koje će
+se podaci slati. Buf je pokazivač na niz bajtova koji će se poslati, a njihov broj je određen
+parametrom len. Podrazumevano ponašanje funkcije send() je da se ona blokira dok se
+svi podaci ne pošalju.
+Parametar flag omogućava izmene podrazumevanog načina izvršenja funkcije.
+Postavljanjem vrednosti flag na 0 postiže se podrazumevano (default) izvršenje.
+int bytesSent = clientSocket.Send(Encoding.UTF8.GetBytes(msg));
+
+Funkcija:
+
+Opis:
+
+Send
+
+Funkcija za slanje podataka preko utičnice koja je uspostavila vezu sa
+drugom utičnicom
+
+Parametri:
+
+Opis:
+
+clientSocket [Socket]
+
+Utičnica preko koje se šalju podaci
+
+msg [str]
+
+Povratna vrednost
+bytesSent [int]
+
+Pokazivač na bafer koji sadrži podatke koji se šalju.
+Opis
+Ako je poziv uspešan, bytesSent će sadržati broj bajtova koji su uspešno
+poslati preko utičnice. Ova vrednost može biti manja od veličine podataka
+koje je trebalo poslati, što znači da se podaci možda ne šalju u celini u
+jednom pozivu.
+Ako je konekcija prekinuta (na primer, udaljeni klijent ili server zatvori
+konekciju), funkcija Send() obično vraća vrednost 0, što znači da nije
+poslato nijedan bajt. Ova situacija ukazuje na prekid veze.
+U slučaju greške, potrebno je uhvatiti izuzetak - SocketException ili koristiti
+izlazni parametar SocketError kako bi se dobila konkretna informacija o
+grešci.
+
+Primer:
+int bytesSent = clientSocket.Send(Encoding.UTF8.GetBytes("this is a test"));
+
+6
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol (TCP)
+
+2.2 Prijem podataka
+Funkcija Receive() služi za prijem podataka preko utičnice koja je uspostavila vezu sa
+drugom utičnicom. Ova funkcija se poziva nad konektovanom/prihvaćenom utičnicom
+preko koje će se podaci primiti. Buffer je pokazivač na bafer gde će se primljeni podaci
+smestiti. Podrazumevano ponašanje funkcije Receive() je da se ona blokira dok ne primi
+bar nekoliko bajtova podataka (na većini sistema ta minimalna količina podataka je 1 bajt).
+Važna napomena: Broj bajta primljen jednim pozivom funkcije Receive() nije nužno
+jednak broju bajtova koji su poslati jednim pozivom funkcije Send().
+Primer:
+byte[] buffer = new byte[BUFFER_SIZE];
+int bytesReceived = acceptedSocket.Receive(buffer);
+Console.WriteLine("Received: {0}", Encoding.UTF8.GetString(buffer, 0, bytesReceived));
+
+Funkcija:
+
+Opis:
+
+Receive
+
+Funkcija za prijem podataka preko utičnice koja je uspostavila vezu sa
+drugom utičnicom
+
+Parametri:
+
+Opis:
+buffer [byte]
+
+Povratna vrednost
+bytesReceived [int]
+
+Prijemni bafer u koji se smeštaju dolazni podaci
+Opis
+Ako je poziv uspešan, bytesReceived će sadržati broj bajtova koji su
+uspešno poslati preko utičnice. Ova vrednost može biti manja od
+veličine podataka koje je trebalo poslati, što znači da se podaci možda
+ne primaju u celini u jednom pozivu.
+Ako je konekcija prekinuta (na primer, udaljeni klijent ili server zatvori
+konekciju), funkcija Receive() obično vraća vrednost 0, što znači da nije
+poslato nijedan bajt. Ova situacija ukazuje na prekid veze.
+U slučaju greške, može se uhvatiti izuzetak - SocketException ili koristiti
+izlazni parametar SocketError kako bi se dobila konkretna informacija
+o grešci.
+
+7
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol
+
+3. Sprečavanje slanja i/ili prijema podataka preko utičnice
+Funkcija koja sprečava slanje i/ili prijem preko utičnice (bilo kog tipa, TCP ili UDP) je funkcija
+Shutdown. Funkcija Shutdown ne vrši zatvaranje utičnice, što znači da bilo koji resursi zauzeti
+od strane utičnice neće biti oslobođeni nakon poziva Shutdown. Da bi se obezbedilo da su svi
+podaci na konektovanoj utičnici poslati i primljeni, aplikacija bi trebala prvo da pozove
+Shutdown, a zatim da zatvori utičnicu sa Close.
+clientSocket.Shutdown(SocketShutdown.Both);
+
+4. Dobijanje informacija o utičnici
+Za svaku TCP utičnicu koja je povezana sa drugom utičnicom (drugim računarom), sistem
+prepoznaje dve adrese: lokalnu i udaljenu. Ove adrese se mogu saznati preuzimanjem vrednosti
+polja Socket.LocalEndPoint (za lokalnu adresu) i Socket.RemoteEndPoint (za
+udaljenu adresu). Obe funkcije vraćaju EndPoint strukturu, a ona je u slučaju
+RemoteEndPoint popunjena sa informacijom o IP adresi i portu udaljene utičnice sa kojom je
+uspostavljena veza.
+Primer za dobijanje udaljene adrese:
+// Pretpostavljamo da je veza već uspostavljena na connectedSocket
+Socket connectedSocket = /*...*/;
+// Dobijanje udaljene (remote) IP adrese i porta
+IPEndPoint remoteEndPoint = connectedSocket.RemoteEndPoint as IPEndPoint;
+if (remoteEndPoint != null)
+{
+Console.WriteLine("Peer's IP address is: {0}", remoteEndPoint.Address.ToString());
+Console.WriteLine("Peer's port is: {0}", remoteEndPoint.Port);
+}
+else
+{
+Console.WriteLine("Could not retrieve remote end point information.");
+}
+
+Primer za dobijanje lokalne adrese:
+// Dobijanje lokalne (local) IP adrese i porta
+IPEndPoint localEndPoint = connectedSocket.LocalEndPoint as IPEndPoint;
+if (localEndPoint != null)
+{
+Console.WriteLine("Local IP address is: {0}", localEndPoint.Address.ToString());
+Console.WriteLine("Local port is: {0}", localEndPoint.Port);
+}
+else
+{
+Console.WriteLine("Could not retrieve local end point information.");
+}
+
+8
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol
+
+5. Pregled utičnica na lokalnom računaru
+Netstat dijagnostički program prikazuje statistike protokola i trenutne TCP/IP konekcije sa i
+prema drugim mrežnim uređajima. Na komandnoj liniji potrebno je upisati netstat –a da bi se
+prikazale sve konekcije i portovi na kojima se te konekcije uspostavljaju. Opcija –n upućuje
+Netstat da ne prevodiadrese i brojeve portova u imena, čime se ubrzava izvršavanje. Moguće je
+kombinovati različite opcije unutar jedne komande. Na slici 4 prikazan je primer komande netstat
+– a –n.
+
+Slika 4 - Primer netstat naredbe
+
+Broj iza dvotačke je broj porta koji konekcija koristi, dok kolona State predstavlja trenutno stanje
+konekcije po pojedinoj adresi i portu (tj. utičnici).
+Postoji veći broj (tačnije 10) mogućih stanja konekcije od kojih ćemo izdvojiti samo neke:
+ LISTENING - Server je spreman za prihvatanje konekcije
+ ESTABLISHED - Uspostavljena konekcija sa udaljenim hostom
+ CLOSED - Zatvorena konekcija prema udaljenom hostu
+ CLOSE_WAIT - Server je u procesu raskida konekcije prema klijentu
+ TIME_WAIT - Klijent je u procesu raskida konekcije prema serveru.
+
+9
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol
+
+ZADATAK 1
+Realizovati implementaciju klijentske i serverske aplikacije koje koriste TCP transportni protokol
+za komunikaciju unutar jednog računara.
+1. Skicirati implementaciju klijenta.
+2. Skicirati implementaciju servera.
+3. Pratiti stanja utičnica na serveru i klijentu koristeći kontrolisano izvršavanje programa i
+netstat dijagnostički program.
+4. Omogućiti slanje poruke sa klijentske aplikacije i njen prijem na serverskoj aplikaciji. Kada
+server primi poruku, ispisuje njen sadržaj i sa koje adrese/porta je primljena poruka.
+Omogućiti serveru da nakon prijema poruke server pošalje poruku klijentu.
+5. Omogućiti komunikaciju između dva različita računara.
+Napomena: IP adresu drugog računara moguće je dobaviti korišćenjem ipconfig naredbe u
+Command Promt-u.
+
+ZADATAK 2
+Unaprediti implementaciju klijentske i serverske aplikacije iz prvog zadatka tako da se mogu slati
+objekti strukture RezultatTesta:
+1. Struktura RezultatTesta sadrži polja ImePrezime (tipa string), BrIndeksa (tipa string) i
+BrPoena(tipa int).
+2. Klijent može da pošalje više poruka serveru u kojima šalje rezultate testa (objekte
+strukture). Pre slanja podataka, potrebno je uneti vrednosti za sva polja strukture.
+3. Kada se primi ovakva poruka na serveru, on obrađuje i čuva podatke o svim rezultatima.
+4. Kada klijent prekine komunikaciju sa serverom, ispisati sortiranu listu svih studenata
+prema broju poena.
+Poravnati ispis (slično tabelarnom) se dobija navođenjem broja pozicija koje će pri
+ispistu zauzeti dati podatak:
+Console.WriteLine("{0,-10}", BrIndeksa); //zauzima 10 pozicija na ekranu za
+ispis vrednosti BrIndeksa
+
+ZADATAK 3
+Unaprediti implementaciju klijentske i serverske aplikacije iz prvog zadatka tako da realizuje igru
+„Na slovo na slovo“:
+1. U igri učestvuju dva klijenta. Da bi igra započela potrebno je da prethodno oba klijenta
+uspostave vezu sa serverom. Ispisati na ekranu adresne informacije o oba klijenta nakon
+što se uspostavi veza.
+2. Nakon uspešnog povezivanja klijenata na serverskoj utičnici, na konzolnom prozoru
+servera se unosi slovo na koje će se igra igrati. Server klijentima šalje obaveštenje o
+početku igre i slovo na koje se igra, npr. “Počinje igra na slovo G. Šaljite reči.”
+3. Svaki od klijenata ima mogućnost da bira (unosi) svoju reč na zadato slovo i svoj izbor
+šalje serveru.
+4. Server proverava da li prisitigle reči počinju na zadato slovo. Rezultat provere ispisati na
+ekranu servera.
+10
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 9: Transmission Control Protocol
+
+5. Igra se nastavlja sve dok jedan klijent ne pogreši ili ne odustane. Klijent odustaje od igre
+slanjem reči “Kraj”.
+6. Ako oba klijenta istovremeno pogreše igra se nastavlja.
+7. Na kraju igre server šalje klijentima rezultat igre.
+Rezultat prikazati u formatu poruke koja sadrži: broj ispravnih reči prvog klijenta, broj
+ispravnih reči drugog klijenta i pobednika igre.
+8. Server prihvata reč ako je poslata i na malo i na veliko zadato slovo.
+9. Ako klijenti istovremeno odustanu od igre (unosom reči “Kraj“), pobednik je onaj čiji je
+ukupan zbir dužina poslatih ispravnih reči veći.
+10. Ukoliko se u toku igre desi greška pri prenosu ili prijemu poruke, igra se prekida.
+
+11
+
+

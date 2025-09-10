@@ -1,0 +1,337 @@
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+Vežba 10: Blokirajuće i neblokirajuće
+utičnice
+Utičnice mogu izvršavati ulazno-izlazne operacije u blokirajućem i neblokirajućem režimu.
+Razlika između ova dva režima je u tome što, kada god bi operacija nad blokirajućom
+utičnicom zaustavljala izvršenja glavnog programa, neblokirajuća utičnica ne bi dozvolila
+operaciju već bi vratila specijalnu "would block" poruku greške.
+Pokušajmo dočarati blokirajuće i neblokirajuće režime kroz situacije iz svakodnevnog života.
+
+Blokirajući režim
+
+Neblokirajući režim
+
+"Ne volim da putujem
+autobusom, jer retko kada
+stignem na stanicu, a da
+me on sačeka.
+Uglavnom ja njega čekam,
+što ume potrajati. Jednom
+smo ga posle utakmice
+čekali par sati, ali ga nije
+bilo. Mora da se pokvario."
+
+"Ne podgrevam više ništa
+na ringli. Dosadno mi je
+stojati uz šporet.
+Ovako stavim meso u
+mikrotalasnu i taman kad
+se završi "Državni posao",
+eto i moja večera javlja da je
+spremna."
+
+Ista operacija pozvana u različitim trenucima može jednom blokirati izvršenje, a drugi put ne.
+U nastavku su data četiri tipa operacija i uslovi pod kojima će te operacije blokirati izvršenje:
+ Operacije čitanja (Receive, ReceiveFrom) – primalac poruke će biti blokiran sve dok
+poruka koju očekuje ne pristigne sa mreže. Ako nema dostupnih podataka, niti je
+postavljen timeout, operacija će čekati na dolazne podatke.
+ Operacije pisanja (Send, SendTo) – pošiljalac poruke će biti blokiran ako nema
+dovoljno slobodnog mesta u baferu za slanje poruke. Operacija se nastavlja kada se
+oslobodi prostor u baferu.
+ Operacija prijema konekcija (Accept) – server će biti blokiran do trenutka kada stigne
+novi zahtev za uspostavu konekcije. Ako nema dolaznih zahteva, operacija će ostati
+blokirana dok se ne pojavi klijent koji traži povezivanje.
+ Operacija iniciranja konekcije (Connect) – klijent će biti blokiran do trenutka uspešnog
+uspostavljanja TCP konekcije (protokol rukovanja). Ako veza ne može da se uspostavi
+(npr. server nije dostupan), operacija će ostati blokirana dok ne istekne timeout ili dok
+se ne javi greška u konekciji.
+1
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+1. Blokirajući soketi
+Blokirajuće utičnice čekaju izvršenje operacije bez obzira na to da li će se ona izvršiti
+momentalno, posle nekog vremena ili se možda nikad neće izvršiti. Problem je, pre svega, u
+tome što je nit onemogućena da za vreme čekanja obavlja još neke zadatke.
+
+program: pošalji mi ove podatke
+socket: okej, ali znaj da operacija može potrajati
+neko vreme
+...
+...
+...
+socket: poslao
+program: hvala, nastavljam sa radom
+
+Slika 1. Blokirajući soket
+Bitno je napomenuti da se za vreme čekanja izvršavanja ne troši dragoceno procesorsko
+vreme. Iako je nit programa blokirana, to ne sprečava druge niti da koriste procesor.
+Sve utičnice koje su korišćene na prethodnim vežbama bile su u blokirajućem režimu koji
+predstavlja podrazumevani (eng. default) režim rada utičnice. Nasuprot njima su
+neblokirajuće utičnice, čija implementacija je zahtevnija, ali omogućava znatno bolje
+performanse komunikacije.
+
+2. Neblokirajuće utičnice
+Funkcije koje se pozivaju nad utičnicom koja je postavljena u neblokirajućem režimu nikada
+neće blokirati izvršavanje programa, već će povratak iz funkcije uslediti odmah nakon poziva.
+Neblokirajuće operacije nad utičnicom će se izvršiti, dok će blokirajuće generisati grešku koja
+će ukazati da nije bilo dovoljno vremena da se operacija izvrši.
+U .NET.Sockets biblioteci, utičnica se može postaviti u neblokirajući režim postavljanjem
+svojstva Blocking na false. Ova operacija se može primeniti na sve tipove utičnica, bez obzira
+na stanje u kojem se nalaze. Takođe, funkcije koje omogućavaju asinkronu obradu podataka
+mogu implicitno postaviti režim soketa na neblokirajući.
+2
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+Deklaracija svojstva Blocking, njegov detaljan opis i primer su dati u nastavku:
+socket.Blocking = false;
+
+U nastavku je dat primer u kome se koristi neblokirajuci režim rada TCP utičnice.
+// Postavljanje utičnice u neblokirajući režim
+Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+ProtocolType.Tcp);
+clientSocket.Blocking = false;
+// Poziv operacije nad utičnicom
+try
+{
+int bytesReceived = clientSocket.Receive(dataBuffer);
+// Provera da li je operacija uspešno izvršena
+if (bytesReceived > 0)
+{
+// Neblokirajuća operacija uspešno izvršena
+Console.WriteLine("Podaci primljeni: " + Encoding.UTF8.GetString(dataBuffer, 0,
+bytesReceived));
+}
+}
+catch (SocketException ex)
+{
+if (ex.SocketErrorCode == SocketError.WouldBlock)
+{
+// U pitanju je blokirajuća operacija koja zbog režima utičnice neće biti izvršena
+Console.WriteLine("Operacija bi blokirala, nastavljam dalje...");
+}
+else
+{
+// Desila se neka druga greška prilikom poziva operacije
+Console.WriteLine("Socket error: " + ex.SocketErrorCode);
+}
+}
+
+3
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+Na početku je potrebno postaviti utičnicu u neblokirajući režim postavljanjem svojstva Blocking
+na false. Nakon toga, poziva se operacija Receive nad utičnicom. Ako operacija ne može biti
+izvršena zbog neblokirajućeg režima, baca se izuzetak SocketException, a kod greške
+SocketError.WouldBlock ukazuje da bi operacija blokirala, ali zbog režima utičnice nije bila
+dozvoljena. Ako je operacija uspešno izvršena, podaci se normalno primaju i obrađuju.
+
+Polling model
+Polling model podrazumeva ponavljanje poziva operacije nad neblokirajućim soketom, dokle
+god se operacija ne izvrši uspešno.
+program: pošalji mi ove podatke
+socket: ne mogu, operacija zahteva blokiranje
+...
+program: pošalji mi ove podatke
+socket: ne mogu, operacija zahteva blokiranje
+...
+program: pošalji mi ove podatke
+socket: ne mogu, operacija zahteva blokiranje
+...
+program: pošalji mi ove podatke
+socket: poslao
+
+Slika 2 – Polling model
+
+U odnosu na blokirajući režim, ovaj model neblokiranja pruža određenu vrstu kontrole u
+okviru petlje koja omogućava da se za vreme čekanja izvrše još neke druge operacije ili da
+se prekine čekanje kada se, na primer, nekoj promenljivoj promeni vrednost. S druge
+strane, za vreme čekanja se troši dragoceno procesorsko vreme i glavni program je za
+vreme čekanja blokiran.
+U .NET Socket biblioteci, polling model se implementira pomoću metode Poll. Ova metoda
+omogućava programu da proveri da li je utičnica spremna za čitanje, pisanje, ili da li je
+došlo do izuzetka.
+Funkcija Poll vraća vrednost true ako utičnica zadovoljava određeni uslov (čitanje, pisanje ili
+greška), ili false ako nije spremna.
+
+4
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+Deklaracija metode Poll
+public bool Poll(int microSeconds, SelectMode mode);
+
+Parametar
+Opis
+microSeconds [int] Broj mikrosekundi koliko će utičnica čekati da zadovolji određeni uslov (0 za
+momentalni povratak).
+mode [SelectMode] Vrednost SelectMode, koja može biti SelectRead, SelectWrite ili SelectError.
+
+SelectRead: Proverava da li je utičnica spremna za čitanje.
+SelectWrite: Proverava da li je utičnica spremna za pisanje.
+SelectError: Proverava da li je došlo do greške.
+Povratna vrednost
+Opis
+bool Metoda vraća true ako je utičnica spremna za operaciju u navedenom režimu, ili
+false ako nije.
+
+Primer:
+// Definisanje i povezivanje soketa
+Socket listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+ProtocolType.Tcp);
+listenSocket.Bind(new IPEndPoint(IPAddress.Any, 51000));
+listenSocket.Listen(10);
+Socket acceptedSocket = listenSocket.Accept();
+while (true)
+{
+// Polling model - čekanje da utičnica bude spremna za prijem
+if (acceptedSocket.Poll(1000 * 1000, SelectMode.SelectRead)) // 1000 ms
+{
+byte[] dataBuffer = new byte[256];
+int bytesRead = acceptedSocket.Receive(dataBuffer);
+string message = Encoding.UTF8.GetString(dataBuffer, 0, bytesRead);
+Console.WriteLine("Primljena poruka: " + message);
+}
+else
+{
+Console.WriteLine("Još uvek čekam...");
+}
+}
+
+5
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+Zadatak 1
+Nadograditi primer implementacije UDP klijenta i servera sa termina osmih vežbi:
+1. Omogućiti prijem svih poruka čije odredište je port 15001.
+2. Implementirati polling model neblokiranja na serveru, koji omogućava da se
+prilikom prijema poruka od klijenta ne blokira nit procesora.
+ Za postavljanje neblokirajućeg režima promeniti svojstvo Blocking na utičnici.
+ Za realizaciju iterativnog pokušaja prijema poruka sa mreže koristiti
+programska petlja.
+3. Smanjiti potrošnju procesorskog vremena za vreme čekanja prispeća podataka.
+ Između dva pokušaja potrebno je sačekati 1 sekundu.
+4. Za vreme čekanja potrebno je ispisati na ekran broj trenutnog pokušaja.
+5. Obezbediti mogućnost prekida prijema poruka na serveru ukoliko u periodu od 30
+sekundi ne primi nijednu poruku.
+
+Zadatak 2
+
+Nadograditi primer implementacije UDP klijenta i servera sa termina osmih vežbi:
+1. Na serveru napraviti dve UDP utičnice i povezati ih sa adresama i portovima koji su
+dati u nastavku:
+ serverSocket1
+o IP adresa: 127.0.0.1
+o Port: 17010
+ serverSocket2
+o IP adresa: sve dostupne adrese
+o Port: 17011
+2. Implementirati polling model neblokiranja na serveru koji će omogućiti da se prilikom
+prijema poruka od klijenata ne blokira nit procesora.
+a) Obezbediti neblokirajući režim izvršavanja operacija nad serverskim utičnicama.
+b) Smanjiti potrošnju procesorskog vremena za vreme čekanja prispeća poruka.
+Sačekatido narednog pokušaja prijema poruke 1,5 s.
+c) Kada poruka stigne, ispisati sadržaj poruke i koja utičnica ju je primila.
+3. Prepoznati koji klijent je prvi poslao poruku pa njemu dodeliti 1 poen.
+Napomena: pri testiranju programa slati naizmenično poruku sa jednog, pa drugog
+klijenta proizvoljnim redosledom.
+4. Na klijentskoj strani potrebno je na početku programa učitati iz komandne linije port
+servera ka kome će se slati poruke. To će omogućiti da se izvršavanjem istog
+klijentskog koda mogu slati poruke ka različitim serverskim portovima (portovi 17010
+i 17011).
+5. Omogućiti klijentu da može poslati više poruka serveru. Ukoliko klijent upiše “kraj”
+potrebno je zaustaviti rad klijenta.
+6
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+Zadatak 3
+Nadograditi primer implementacije TCP klijenta i servera sa prethodnog termina vežbi:
+1. Server koji aktivno sluša zahteve za uspostavom veze na portu 18010 treba da
+
+uspostavi konekciju sa 2 klijenta. Prilikom uspostave veze ispisati adresne
+informacije o klijentu sa kojim je veza ostvarena.
+
+Napomena: komunikacija sa klijentima će se odvijati tek nakon što se oba klijenta konektuju.
+2. Implementirati polling model neblokiranja na serveru koji će omogućiti da se prilikom
+prijema poruka od klijenata ne blokira nit procesora.
+a) Obezbediti neblokirajući režim izvršavanja operacija nad utičnicama namenjenim
+razmeni podataka sa klijentima.
+b) Smanjiti potrošnju procesorskog vremena za vreme čekanja prispeća poruka.
+Sačekatido narednog pokušaja prijema poruke 1,5 s.
+c) Kada poruka stigne, ispisati sadržaj poruke i koja utičnica ju je primila.
+3. Omogućiti klijentu da može poslati više poruka serveru. Ukoliko se na klijentu unese
+“kraj” potrebno je zaustaviti rad klijenta.
+4. Omogućiti da klijent u okviru jedne poruke pošalje listu sa barem 3 celobrojne
+vrednosti.
+5. Na serveru nakon prijema poruke omogućiti pravilan ispis primljene liste.
+6. Server kao odgovor na klijentovu poruku šalje poruku koja sadrži zbir vrednosti koje
+mu je klijent prosledio u listi. Na klijentu ispisati primljeni odgovor.
+
+Zadatak 4
+Nadograditi primer implementacije TCP klijenta i servera sa prethodnog termina vežbi:
+1. Na TCP serveru obezbediti da se korišćenjem polling modela neblokiranja prihvate
+konekcije sa 2 klijenta:
+Obezbediti neblokirajući režim izvršavanja operacija nad serverskom utičnicom
+a)
+koja sluša zahteve za uspostavom veze na portu 19010.
+b)
+Smanjiti potrošnju procesorskog vremena za vreme čekanja zahteva. Do
+narednog pokušaja prijema konekcije sačekati 2 s.
+Kada zahtev za vezom stigne, prihvatiti ga i ispisati adresne informacije o
+c)
+klijentu sa kojim je uspostavljena veza.
+Napomena: komunikacija sa klijentima će se odvijati tek nakon što se oba klijenta konektuju.
+Zadatak je moguće uraditi tako što će se ovaj korak pojednostaviti prijemom konekcija u
+podrazumevanom (blokirajućem) režimu.
+2. Implementirati polling model neblokiranja na serveru koji će omogućiti da se prilikom
+prijema poruka od klijenata ne blokira nit procesora.
+7
+
+Primenjeno softversko inženjerstvo
+Primena računarskih mreža u IS
+
+Vežba 10: Blokirajuće i neblokirajuće utičnice
+
+a) Obezbediti neblokirajući režim izvršavanja operacija nad serverskim utičnicama
+namenjenim klijentima.
+b) Smanjiti potrošnju procesorskog vremena za vreme čekanja prispeća poruka.
+Sačekati do narednog pokušaja prijema poruke 1 s.
+c) Kada poruka stigne, ispisati sadržaj poruke i koja utičnica ju je primila.
+
+3. Omogućiti klijentu da može poslati više poruka serveru. Ukoliko se na klijentu
+unese “kraj” potrebno je zaustaviti rad klijenta.
+4. Omogućiti da klijent u okviru jedne poruke pošalje listu sa najmanje 3 celobrojne
+vrednosti.
+5. Na serveru omogućiti adekvatan ispis primljenih celobrojnih vrednosti.
+6. Server kao odgovor klijentu šalje najveću vrednost iz liste u formatu: “Najveći poslati
+broj je 100.” u slučaju da je sever primio vrednosti 50, 99 i 100.
+
+8
+
+

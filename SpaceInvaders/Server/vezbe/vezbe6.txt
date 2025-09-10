@@ -1,0 +1,234 @@
+
+
+
+Vežba 6: Kriptografija
+
+1. Osnovni pojmovi i terminologija u kriptografiji
+
+   Termin originalni tekst (eng. plaintext) odnosi se na tekst koji je moguce procitati i razumeti bez primene nekih posebnih metoda. Ukoliko se taj tekst prenosi preko nekog komunikacionog kanala, on se naziva poruka. Poruka se može slati putem racunarske mreže kako u originalnom obliku, tako da svima bude razumljiva, ili kao nerazumljiv sadržaj koji se naziva šifrovan tekst (eng. ciphertext).
+   Postupak pomocu koga se originalni tekst poruke transformiše u šifrovan tekst naziva se šifrovanje (eng. encryption). Šifrovanje se koristi da bi se obezbedilo da nijedan korisnik, osim korisnika kome je poruka namenjena, ne može da sazna sadržaj poruke. Ukoliko neki neovlašceni korisnici dodu u posed šifrovanog teksta, oni ne mogu procitati originalni tekst poruke. Šifrovanje originalnog teksta se obavlja pomocu odredenog pravila za šifrovanje odnosno algoritma šifrovanja. Svaki algoritam šifrovanja kao ulazne podatke ima originalnu poruku i kljuc, a kao izlaz daje šifrovanu poruku.
+Cilj šifrovanja poruka je da se omoguci:
+A. Poverljivost podataka - obezbedivanje da neautorizovana (neovlašcena) strana ne dode do poverljivih informacija.
+B. Autenticnost podataka - omogucava definisanje i proveru identiteta pošiljaoca.
+C. Integritet podataka - prevencija neovlašcene promene sadržaja poruke (izmena, brisanje, uništavanje) prilikom njenog slanja.
+Postupak koji omogucava da se od šifrovane poruke dobije originalna poruka naziva se
+dešifrovanje (eng. decryption).
+
+U kriptologiji postoje dva osnovna bezbednosna modela, a to su: simetricni (eng. symmetric) ili model sa tajnim kljucevima i asimetricni (eng. asymmetric) ili model sa javnim i privatnim kljucevima. Moderni kriptološki sistemi su najcešce kombinovani (eng. hibrid) u cilju postizanja kompletne zaštite, najcešce u više nivoa.
+
+
+
+
+Slika 1. Simetricni i asimetricni model šifrovanja poruka
+
+   Bezbednost današnjih sistema definiše se u skladu sa trenutnim razvojem racunara, cije performanse imaju veliku ulogu u razvoju kriptologije. Cilj je napraviti takav algoritam cija cena dešifrovanja bi bila veca od vrednosti same šifrovane poruke. Takode, skup mogucih kljuceva mora biti dovoljno velik da bi postupak potpune pretrage kljuceva bio nemoguci u konacnom vremenu.
+
+2. Klasicna kriptografija
+
+      U nastavku vežbe ukratko ce biti razmotrene klasicne šifre koje su izabrane zbog svog istorijskog znacaja i da bi se na njihovom primeru prikazali osnovni principi koji postoje i danas kod modernih šifara. Podela klasicne kriptografije prema tipovima šifri prikazana je na Slici 2.
+
+Slika 2. Podela klasicne kriptografije na tipove šifri
+
+
+A. Šifre transpozicije
+
+   Šifre transpozicije rade na principu premeštanja slova originalne poruke. Tako dobijeni skremblovani tekst predstavlja šifrovanu poruku, a primenjena transpozicija kljuc šifrovanja. Prva šifra ovog tipa poznata je pod imenom Skitala i koristili su je Spartanci još 500. godine pre nove ere. Princip rada šifre je vrlo jednostavan. Obavijala se kožna traka oko štapa i zatim se poruka pisala na tako dobijenom omotacu duž štapa. Kada je poruka bila napisana, kožna traka se razmotavala i dobijao se ispremeštan tekst. Znakove je mogao procitati samo onaj ko je imao štap jednake debljine. Može se zakljuciti da je kompletna tajnost ove šifre odredena debljinom štapa, tj. debljina štapa zapravo predstavlja kljuc šifrovanja.
+
+Slika 3. Skitala
+
+
+
+A.1 Transpozicija vrsta i kolona
+      Dvostruka transpozicija predstavlja moderniju verziju Skitale koja se realizuje tako što se menja redosled kolona i redosled redova u izabranoj dimenziji matrice [n x m]. U ovom slucaju kljuc je dimenzija matrice i permutacije po kolonama i redovima.
+
+
+kolone0123456kolone1062435red 0UNIVERZred 1TIOEUTNred 1ITETUNOred 0NUZIEVRred 2VOMSADUred 2OVUMASD
+
+
+Originalna poruka:	UNIVERZITET U NOVOM SADU
+Kljuc:	dimenzija matrice [3×7], permutacije kolona (1,0,6,2,4,3,5) permutacije vrsta (1,0,2)
+Šifrovana poruka:	TIOEUTNNUZI E VROVU MASD
+
+
+B. Šifre zamene (supstitucije)
+
+      Kod šifri supstitucije, raspored slova originalne poruke ostaje nepromenjen, ali slova teksta menjaju svoju vrednost, tj. preslikavaju se u druga slova. Postoji više tipova šifara zamene: monoalfabetske, homofone, poligramske i polialfabetske šifre.
+
+B.1 Monoalfabetska šifra
+Najstariji primer ovog nacina šifrovanja predstavlja postupak koji je Julije Cezar koristio za razmenu poruka sa svojim generalima. To je tip šifre proste zamene u kome se svako slovo originalne poruke menja odgovarajucim slovom azbuke, pomerenim za odredeni broj mesta koji definiše kljuc. Na primer, sa pomakom 3, A se zamenjuje slovom G, B sa D itd.
+
+ABVGDÐEŽZIJKLLJMGDÐEŽZIJKLLJMNNJO
+NNJOPRSTCUFHCCDŽŠPRSTCUFHCCDŽŠABV
+
+Originalni tekst:	 FAKULTET TEHNICKIH NAUKA Šifrovani tekst:	CGMCNFIF FIDŽPLAMLJLDŽ PGCMG
+
+Još jedan primer šifre supstitucije (zamene) slova je šifra koja koristi kljucnu rec (Keyword Cipher). Nakon što se odredi kljucna rec (koja mora imati samo jednu pojavu svakog slova u sebi), na osnovu nje se kreira alfabet zamenskih slova, tako što se nakon te kljucne reci dodaju sva neupotrebljena slova alfabeta u redosledu u kom stoje u alfabetu. Šifrovanje originalnog teksta se vrši tako što se svako slovo iz teksta menja svojim zamenskim slovom, tj. na osnovu pozicije konkretnog slova u alfabetu traži se slovo na istoj poziciji u alfabetu zamenskih slova.
+
+Kljucna rec:	CRYPTO
+Alfabet:	A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+Alfabet zamenskih slova:  C R Y P T O A B D E F G H I J K L M N Q S U V W X Z
+
+
+Originalni tekst:	 FACULTY OF TECHNICAL SCIENCES Šifrovani tekst:	OCYSGQX JO QTYBIDYCG NYDTIYTN
+
+B.2 Homofone šifre - Homofone šifre predstavljaju unapredenje šifre prostih zamena, uvodeci element slucajnosti. Svako slovo se predstavlja sa jednim ili više brojnih kodova.
+
+AABVGDÐEEŽZI121416182022242628303234
+IJKLLJMNNNJOOP111009080706050403020100
+RRSTCUFHCCDŽŠ131517192123252729313335
+Originalni tekst: FAKULTET TEHNICKIH NAUKA
+Šifrovani tekst: 28 12 09 23 08 19 28 19 19 26 27 04 34 31 09 11 27 05 12 23 09 14
+
+B.3 Poligramske šifre - rade na principu zamena nad vecim grupama slova u originalnoj poruci. Jedna od najpoznatijih šifara je Plejfer šifra, koju su koristili Britanci tokom Prvog svetskog rata. Kljuc Plejfer šifre bila je matrica dimenzija [5 x 5] sa 25 slova, karakter "J" se nije koristio ili je bio prisvojen nekom drugom slovu. Matrica se konstruiše na osnovu izabrane kljucne reci. Par slova originalne poruke m1 i m2 šifruje se u skladu sa sledecim pravilima:
+* Ako su m1 i m2 u istom redu (ili koloni), tada su c1 i c2 dva slova koja se nalaze desno (ili ispod) od m1 i m2. Usvojeno je da je prva kolona susedna poslednjoj koloni, a prvi red susedan poslednjem redu.
+* Ako su m1 i m2 u razlicitim kolonama i redovima, tada su c1 i c2 ostale dve ivice (temena) pravougaonika koji sadrži ivice m1 i m2, gde je c1 u istom redu kao i m1 dok je c2 u istom redu kao i m2.
+* Ako je m1 = m2 , slovo se prepisuje i umesto drugog slova se dodaje slovo "x".
+* Ukoliko originalna poruka ima neparan broj slova tada se na kraj poruke dodaje neutralni karakter.
+
+PRIMER
+Kljuc je generisana matrica [5x5] za izabranu kljucnu rec "FTN".
+
+FTNABCDEGHIKLMOPQRSUVWXYZ
+Originalan tekst:	NO VI SA D Šifrovan tekst:	BL FP YG EW
+
+
+B.4 Polialfabetske šifre - koriste veliki broj zamena na razlicitim pozicijama u poruci, u kojoj se slovo iz originalne poruke preslikava u jednu od nekoliko mogucnosti u šifrovanu poruku. Najpoznatija šifra je Vižnerova šifra koja šifruje tekst korišcenjem tablice koja predstavlja serije Cezarovih šifara, zasnovanih na slovima kljuca.
+
+
+
+
+
+PRIMER
+Originalan tekst: ATTACK AT DAWN Šifra:	LEMON
+Produžena šifra: LEMON LEMON LE Šifrovan tekst:	LXFOPVEFRNHR
+
+
+
+
+
+
+
+C. Jednokratne šifre
+      Jednokratne šifre koriste kljuc koji se samo jednom može upotrebiti i predstavljaju jedinu šifru za koju postoji matematicki dokaz o savršenoj bezbednosti. Poruka se predstavlja binarnim nizom u kome je svako slovo zamenjeno odgovarajucim binarnim kodom i kodovanje ne mora biti tajno. Za šifrovanje se koristi kljuc koji predstavlja slucajan niz bita iste dužine kao i sama poruka. Šifrovana poruka se iz originalne poruke dobija tako što se primeni xor operacija originalnog teksta i kljuca, c = a ? b.
+
+Originalna poruka:
+
+
+Kljuc:
+
+
+Šifrovana poruka:
+
+
+D. Kodne knjige
+      Kodne knjige predstavljaju mocan mehanizam za šifrovanje poruka i imale su veliku primenu u Drugom svetskom ratu. Najcešce su implementirane u vidu dva recnika, od kojih se jedan koristi za šifrovanje, a drugi za dešifrovanje poruka. Ovi recnici omogucavaju prevodenje fraza u kodne oznake i obrnuto. Sigurnost ovakvog šifarskog sistema se zasniva na fizickoj bezbednosti kodne knjige.
+
+
+Slika 4. Cimermanov telegram, šifrovana poruka i njen prevod.
+
+3. Funkcije memset i memcpy
+
+void* memset (void *ptr, int value, int bytes);
+
+
+   Funkcija memset se koristi za postavljanje prvih bytes bajtova memorijskog bloka na koji pokazuje pokazivac ptr na konkretnu vrednost value (interpretira se kao unsigned char). Napomena: pošto je ptr tipa void*, može se proslediti bilo koji tip pokazivaca kao parametar.
+
+
+void* memcpy (void *dst, const void* src, int bytes);
+
+
+   Funkcija memcpy se koristi za kopiranje bytes bajtova sa memorijske lokacije na koju pokazuje pokazivac src u memorijski blok na koji pokazuje dst. Rezultat funkcije je binarna kopija podataka. Napomena: funkcija ne proverava da li se dostigao null terminator u src - uvek se kopira tacno bytes bajtova (dužina src i dst ne sme biti manja od bytes)
+
+void dispatcher_handler(unsigned char* user, const struct pcap_pkthdr* packet_header, const unsigned char* packet_data)
+{
+int velicinaPaketa = packet_header->len; char kopija[1000];
+memset(kopija, 0, velicinaPaketa * sizeof(char));
+
+ethernet_header* eh = (ethernet_header*)packet_data; memcpy(kopija, eh, sizeof(ethernet_header) * sizeof(char));
+if (ntohs(eh->type) == 0x0800)
+{
+ip_header* ih = (ip_header*)((unsigned char*)eh + sizeof(ethernet_header));
+memcpy(kopija + sizeof(ethernet_header), ih, (ih->header_length * 4) *
+sizeof(char));
+if (ih->next_protocol == 17)
+{
+udp_header* uh = (udp_header*)((unsigned char*)ih + ih->header_length *
+4);
+
+memcpy(kopija + sizeof(ethernet_header) + ih->header_length * 4, uh, sizeof(udp_header));
+
+char* app_data = (char*)((unsigned char*)uh + sizeof(udp_header)); int app_length = ntohs(uh->datagram_length) - sizeof(udp_header);
+app_data[app_length] = '\0'; char cipher[200] = "\0";
+strcpy(cipher, CaesarCipher(app_data, cypherKey)); printf("Sifrovano: %s", cipher);
+
+memcpy(kopija + sizeof(ethernet_header) + ih->header_length * 4 + sizeof(udp_header), cipher, app_length);
+
+pcap_dump((unsigned char*)file_dumper, packet_header, (const unsigned char*)kopija);
+}
+}
+}
+
+char* CaesarCipher(char text[500], int key)
+{
+char ch;
+for (int i = 0; text[i] != '\0'; i++)
+{
+ch = text[i];
+if (ch >= 'a' && ch <= 'z')
+{
+ch = (ch - 'a' + key) % 26 + 'a';
+}
+else if (ch >= 'A' && ch <= 'Z')
+{
+
+}
+else {
+}
+
+ch = (ch - 'A' + key) % 26 + 'A';
+
+ch = (ch - '0' + key) % 10 + '0';
+
+text[i] = ch;
+}
+return text;
+}
+
+Zadatak 1
+
+1. Uz datu implementaciju nalazi se datoteka inputpackets.pcap koju treba procitati i preuzeti pakete iz nje.
+
+2. Obezbediti citanje Ethernet paketa, ispisati vremenski trenutak kada je paket presreten i vrednost polja Type u heksadecimalnom formatu.
+
+3. Za IPv4 pakete ispisati logicku adresu primaoca paketa i TTL vrednost.
+
+4. Omoguciti prebrojavanje pojava ICMP paketa.
+
+5. Prepoznati TCP pakete, ispisati njihov broj sekvence i velicinu TCP zaglavlja.
+
+6. Kreirati kopije originalnih UDP paketa tako što se iz paketa kopiraju sva zaglavlja (do aplikativnog sloja), a aplikativni deo u kopiji paketa inicijalizuje nulama pomocu funkcija memset i memcpy.
+
+7. Koristeci Plejferovu šifru šifrovati aplikativni deo UDP paketa i postaviti ga kao aplikativni deo paketa u kopiji.
+
+8. Novokreirane pakete zapisati u datoteci encryptedpackets.pcap.
+
+
+Zadatak 2
+
+1. Uz datu implementaciju nalazi se datoteka inputpackets.pcap koju treba procitati i preuzeti pakete iz nje.
+
+2. Obezbediti citanje Ethernet paketa i ispisati broj paketa i fizicku adresu pošiljaoca.
+
+3. Prebrojati pojave ARP paketa i ispisati rezultat.
+
+4. Za svaku pojavu ICMP paketa ispisati njihov tip i kod.
+
+5. Prepoznati TCP pakete, ispisati njihov broj potvrde i port primaoca.
+
+6. Kreirati kopije originalnih UDP paketa tako što se iz paketa kopiraju sva zaglavlja (do aplikativnog sloja), a aplikativni deo u kopiji paketa inicijalizuje nulama pomocu funkcija memset i memcpy.
+
+7. Koristeci Vižnerovu šifru šifrovati aplikativni deo UDP paketa i postaviti ga kao aplikativni deo paketa u kopiji.
+
+8. Novokreirane pakete zapisati u datoteci encryptedpackets.pcap.
+
+

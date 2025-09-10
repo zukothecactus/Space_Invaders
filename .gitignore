@@ -1,0 +1,97 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+**/[Bb]in/
+**/[Oo]bj/
+
+# Visual Studio database / caches
+*.VC.db
+*.VC.opendb
+*.dbmdl
+*.pidb
+*.opendb
+
+# Visual Studio Code workspace (ako ne želiš da delite workspace podešavanja, ostavi ovo)
+.vscode/
+
+# Rider / JetBrains IDE
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# MSBuild / dotnet artifacts
+*.log
+*.vsix
+*.cache
+*.nuget.props
+*.nuget.targets
+
+# Publish / deployment folders
+publish/
+PublishOutput/
+out/
+wwwroot/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Database files
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# Entity Framework & designer
+*.edmx.diagram
+
+# Resharper
+_ReSharper*/
+*__ReSharper*/
+*.DotSettings.user
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Temporary / backup
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Other Visual Studio and tooling indexes (uključuje .vsidx koji ti je pravio problem)
+*.vsidx
+*.sdf
+
+# Logs and reports
+*.log
+*.vsreport
+
+# Optional: local secrets or machine-specific files
+# Dodaj ovde ime fajlova koje koristiš za tajne (ako ih imaš), npr:
+# appsettings.Development.json
+# secrets.json

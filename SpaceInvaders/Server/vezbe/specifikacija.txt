@@ -1,0 +1,69 @@
+‭OPŠTI PODACI O PROJEKTU‬
+‭Naziv projekta:‬
+
+‭Simulacija igre Space Invaders u realnom vremenu‬
+‭TEHNIČKI OPIS PROJEKTA‬
+
+‭Sažetak:‬
+
+‭Primenjene metode:‬
+
+‭Razvoj‬‭simulacije‬‭igre‬‭Space‬‭Invaders‬‭u‬‭kojoj‬‭učestvuju‬‭jedan‬‭ili‬‭dva‬‭igrača‬‭povezana‬
+‭sa‬ ‭centralnim‬ ‭serverom.‬ ‭Igra‬ ‭se‬ ‭odvija‬ ‭u‬ ‭terminalskom‬ ‭okruženju,‬ ‭gde‬ ‭igrači‬ ‭putem‬
+‭TCP‬ ‭protokola‬ ‭dobijaju‬ ‭osnovne‬ ‭informacije‬ ‭o‬ ‭igri‬ ‭i‬ ‭svoje‬ ‭pozicije,‬ ‭dok‬ ‭putem‬ ‭UDP‬
+‭protokola‬ ‭šalju‬‭kretanje‬‭i‬‭akcije‬‭u‬‭realnom‬‭vremenu.‬‭Server‬‭generiše‬‭prepreke‬‭koje‬‭se‬
+‭spuštaju ka igračima, prati njihove akcije i koordiniše ažuriranje stanja igre.‬
+
+‭TCP komunikacija:‬
+‭●‬ ‭Povezivanje igrača sa serverom i razmena osnovnih podataka o igri.‬
+‭●‬ ‭Odabir moda igre (jedan ili dva igrača) i inicijalizacija pozicija.‬
+‭UDP komunikacija:‬
+‭●‬ ‭Slanje informacija o kretanju i akcijama igrača (strelice za pomeranje,‬
+‭space za pucanje).‬
+‭●‬ ‭Server šalje ažurirane podatke o pozicijama loptica, prepreka i igrača.‬
+‭Dinamičko ažuriranje mape igre:‬
+‭●‬ ‭Server održava pravougaonu mapu (20x40).‬
+‭●‬ ‭Ažurira pozicije prepreka, igrača i metaka na osnovu primljenih‬
+‭podataka.‬
+‭Detekcija sudara:‬
+‭●‬ ‭Algoritmi za proveru sudara između metaka i prepreka.‬
+‭●‬ ‭Dinamička promena stanja igre na osnovu rezultata sudara.‬
+‭Prikaz igre u terminalu:‬
+‭●‬ ‭Korišćenje‬‭
+Console.WriteLine‬‭za prikaz elemenata igre,‬‭uključujući‬
+‭prepreke, igrače i metke.‬
+
+‭Opis projekta:‬
+
+‭Sistem simulira igru‬‭Space Invaders‬‭gde igrači kontrolišu‬‭svoje likove u borbi protiv‬
+‭prepreka koje se spuštaju odozgo ka dole. Server ima centralnu ulogu u koordinaciji‬
+‭igre i razmeni informacija između igrača i prepreka.‬
+‭Na početku igre, server zahteva od prvog igrača izbor moda igre (jedan ili dva igrača) i‬
+‭broj poena potrebnih za pobedu. Nakon odabira, server osluškuje TCP zahteve za‬
+‭prijavu igrača. Prilikom prijave, igrači unose svoje ime i prezime, nakon čega im server‬
+‭dodeljuje početne pozicije i šalje informacije o trenutnom stanju mape.‬
+‭Server upravlja igrom na sledeći način:‬
+‭1.‬ ‭Generiše prepreke na vrhu mape koje se ciklično pomeraju ka dole.‬
+‭2.‬ ‭Povezuje se sa igračima putem UDP-a kako bi razmenjivao informacije o‬
+
+‭njihovim kretanjima i akcijama.‬
+‭3.‬ ‭Prati sudare između metaka i prepreka i ažurira stanje igre.‬
+‭4.‬ ‭Prikazuje mapu igre i rezultate u terminalu u realnom vremenu.‬
+
+‭Primer toka igre:‬
+‭1.‬ ‭Pokretanje igre:‬
+‭○‬ ‭Prvi igrač pokreće klijentsku aplikaciju i bira mod igre.‬
+‭○‬ ‭Drugi igrač se povezuje ako je odabran mod za dva igrača.‬
+‭○‬ ‭Server šalje početne pozicije i stanje mape.‬
+‭2.‬ ‭Tok igre:‬
+‭○‬ ‭Server generiše prepreke koje se pomeraju nadole svakih nekoliko‬
+‭sekundi.‬
+‭○‬ ‭Igrači šalju podatke o kretanju i pucanju serveru.‬
+‭○‬ ‭Server detektuje sudare i ažurira stanje igre.‬
+‭3.‬ ‭Završetak igre:‬
+‭○‬ ‭Igra se završava kada jedan ili oba igrača izgube sve živote, ili kada svi‬
+‭poeni potrebni za pobedu budu sakupljeni.‬
+‭○‬ ‭Server prikazuje rang listu sa brojem poena i uništenih prepreka za‬
+‭svakog igrača.‬
+
+
