@@ -11,11 +11,6 @@ uređaju na vašoj mreži, ruter prosleđuje te zahteve na pravilan uređaj i po
 Slika 1: Primer povezivanja pomoću tabele pravila na ruteru
 
 Koristi se za:
-
-
-
-
-
 Udaljeno povezivanje klijent/server aplikacija
 Hostovanje servera za igre, aplikacije, ili projekte na daljinu.
 Pristup sigurnosnim kamerama ili drugim IoT uređajima.
@@ -27,10 +22,6 @@ specifičnom portu.
 2. Ruter prosleđuje zahtev: Na osnovu pravila prosleđivanja porta, ruter prepoznaje koji
 uređaj i port na lokalnoj mreži treba da primi zahtev.
 3. Odgovor: Uređaj odgovara klijentu putem rutera, koristeći iste postavke porta.
-1
-
-Primenjeno softversko inženjerstvo
-Primena računarskih mreža u IS
 
 Prosleđivanje porta
 
@@ -38,17 +29,13 @@ Koraci za konfigurisanje prosleđivanja porta
 U slučaju .Net projekata, za udaljenu komunikaciju klijenta i servera je neophodno
 izvršiti prosleđivanje porta samo na serverskoj strani.
 1. Pristup rutera preko pretraživača
-
-
 
 Otvoriti pretraživač i uneti IP adresu rutera (najčešće 192.168.1.1 ili 192.168.0.1).
 Prijaviti se koristeći korisničko ime i lozinku (proveriti nalepnicu na ruteru ili
 dokumentaciju ako nisu menjane podrazumevane vrednosti).
 
 2. Ustanovljavanje sopstvene logičke (IP) adrese
-
 
-
 
 Na Windows-u:
 1. Otvoriti terminal (Command Prompt) i uneti ipconfig.
@@ -59,14 +46,9 @@ Na macOS/Linux-u:
 2. Pronađite polje "inet" koje sadrži IP adresu.
 
 3. Određivanje porta za aplikaciju
-
-
 Preporučuje se korišćenje portova iz opsega 49152-65535 (dinamički portovi).
 
 4. Konfigurisanje rutera
-
-
-
 Naći sekciju "Port Forwarding", "Applications", ili "Virtual Servers" u podešavanjima rutera.
 Dodati novo pravilo prosleđivanja porta:
 o Ime pravila: Naziv po izboru (npr. "TCPServer" ili "ProjectServer").
@@ -77,16 +59,11 @@ o IP adresa: Lokalna IP adresa uređaja (npr. 192.168.1.100).
 o Protokol: TCP, UDP ili oba (prema zahtevu aplikacije).
 
 5. Čuvanje i pokretanje aplikacije
-
-
-
-
 Sačuvati pravilo i restartovati ruter ako je potrebno, najčešće nije.
 Pokrenuti aplikaciju/server na ciljanom uređaju i proveriti da li je port aktivan.
 Uz pomoć sajta kao što je https://whatismyipaddress.com/ pronaći eksternu IP adresu
 servera i javiti klijentu da će se komunikacija odvijati na korisnikovoj eksternoj IP adresi i
 portu koji je definisan u koraku 4.
-2
 
 Primenjeno softversko inženjerstvo
 Primena računarskih mreža u IS
@@ -94,8 +71,6 @@ Primena računarskih mreža u IS
 Prosleđivanje porta
 
 6. Provera veze pomoću ping i tracert komandi
-
-
 Ping:
 Na klijentskom računaru otvoriti terminal i uneti: ping [eksterna IP adresa servera].
 Ako se dobije odgovor, veza je aktivna.
@@ -103,18 +78,9 @@ Tracert (Windows) ili Traceroute (Linux/macOS):
 o Otvoriti terminal i uneti: tracert [eksterna IP adresa servera] (Windows) ili traceroute
 [eksterna IP adresa servera] (Linux/macOS).
 o Proveriti rutu do ciljanog porta.
-o
-o
-
-
 
 Saveti
-
-
-
 Koristiti složenu lozinku za ruter kako biste sprečili neovlašćen pristup.
 Pratiti dokumentaciju rutera jer su podešavanja različita za svaki model.
-
-3
 
 

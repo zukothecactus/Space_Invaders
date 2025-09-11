@@ -1,18 +1,18 @@
 ﻿using System;
 
-namespace Server
+namespace Player1
 {
-    class Program
+    class Player1Screen
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("=== SPACE INVADERS SERVER ===");
-            Console.WriteLine("Pokretanje servera...\n");
-            
+            Console.WriteLine("=== SPACE INVADERS - IGRAČ 1 ===");
+            Console.WriteLine("Pokretanje klijenta...\n");
+
             try
             {
-                GameServer server = new GameServer();
-                server.Start();
+                SpaceInvadersClient client = new SpaceInvadersClient(1);
+                client.Start();
             }
             catch (Exception ex)
             {

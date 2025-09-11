@@ -92,8 +92,8 @@ namespace Server
     {
         private const int MAP_WIDTH = 30;
         private const int MAP_HEIGHT = 15;
-        private const int TCP_PORT = 51000;
-        private const int UDP_PORT = 51001;
+        private const int TCP_PORT = 51000; // Port za TCP komunikaciju (prosleđivanje porta)
+        private const int UDP_PORT = 51001; // Port za UDP komunikaciju (prosleđivanje porta)
 
         private TcpListener tcpListener;
         private UdpClient udpServer;
@@ -132,15 +132,23 @@ namespace Server
         {
             try
             {
-                // TCP server za početno povezivanje
+                // TCP server za početno povezivanje - sluša na svim interfejsima
                 tcpListener = new TcpListener(IPAddress.Any, TCP_PORT);
                 tcpListener.Start();
 
-                // UDP server za real-time komunikaciju
+                // UDP server za real-time komunikaciju - sluša na svim interfejsima
                 udpServer = new UdpClient(UDP_PORT);
 
                 Console.WriteLine($"=== SPACE INVADERS SERVER ===");
                 Console.WriteLine($"Server pokrenut na TCP portu {TCP_PORT} i UDP portu {UDP_PORT}");
+                
+                // Prikazujemo lokalnu IP adresu
+                string localIP = GetLocalIPAddress();
+                Console.WriteLine($"Lokalna IP adresa: {localIP}");
+                Console.WriteLine($"Za udaljeno povezivanje:");
+                Console.WriteLine($"1. Konfiguriši port forwarding na ruteru za portove {TCP_PORT} i {UDP_PORT}");
+                Console.WriteLine($"2. Koristi eksternu IP adresu u klijentskim aplikacijama");
+                Console.WriteLine($"3. Proveri eksternu IP na: https://whatismyipaddress.com/");
                 Console.WriteLine("Čekam igrače...\n");
             }
             catch (Exception ex)
@@ -148,6 +156,27 @@ namespace Server
                 Console.WriteLine($"Greška prilikom pokretanja servera: {ex.Message}");
                 return;
             }
+        }
+
+        private string GetLocalIPAddress()
+        {
+            try
+            {
+                string hostName = Dns.GetHostName();
+                IPHostEntry hostEntry = Dns.GetHostEntry(hostName);
+                foreach (IPAddress ip in hostEntry.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip))
+                    {
+                        return ip.ToString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Greška dobijanja IP adrese: {ex.Message}");
+            }
+            return "Nepoznato";
         }
 
         private void WaitForPlayers()
@@ -564,7 +593,7 @@ namespace Server
                 }
             }
 
-            // Uklanjamo objekte u obrnutom redosledu (od najvećeg indeksa ka najmanjem)
+            // Uklanjamo objekte u obrnutom redoslede (od najvećeg indeksa ka najmanjem)
             bulletsToRemove.Sort();
             bulletsToRemove.Reverse();
             foreach (int index in bulletsToRemove)

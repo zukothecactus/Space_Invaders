@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Player1
+namespace Player2
 {
     public class SpaceInvadersClient
     {
-        private const int TCP_PORT = 51000;
-        private const int UDP_PORT = 51001;
-        private const string SERVER_IP = "127.0.0.1"; // localhost za testiranje
+        private const int TCP_PORT = 51000; // Port za TCP komunikaciju (port forwarding)
+        private const int UDP_PORT = 51001; // Port za UDP komunikaciju (port forwarding)
+        private string serverIP; // Konfigurisaći se dinamički
 
         private int playerId;
         private TcpClient tcpClient;
@@ -35,8 +35,11 @@ namespace Player1
         {
             try
             {
-                Console.WriteLine("=== SPACE INVADERS - IGRAČ 1 ===");
-                Console.WriteLine("Pokušavam povezivanje sa serverom...");
+                Console.WriteLine("=== SPACE INVADERS - IGRAČ 2 ===");
+                Console.WriteLine("Konfiguracija mrežne konekcije...\n");
+                
+                // Konfigurišemo server IP adresu
+                ConfigureServerConnection();
                 
                 // TCP konekcija za početno povezivanje
                 ConnectToServer();
@@ -65,19 +68,82 @@ namespace Player1
             }
         }
 
+        private void ConfigureServerConnection()
+        {
+            Console.WriteLine("╔════════════════════════════════════════════════╗");
+            Console.WriteLine("║            KONFIGURACIJA KONEKCIJE            ║");
+            Console.WriteLine("╚════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            Console.WriteLine("Izaberite tip konekcije:");
+            Console.WriteLine("1. Lokalna konekcija (127.0.0.1)");
+            Console.WriteLine("2. Udaljenu konekcija (eksterna IP adresa)");
+            Console.WriteLine();
+            Console.Write("Unesite izbor (1 ili 2): ");
+            
+            string choice = Console.ReadLine();
+            
+            if (choice == "2")
+            {
+                Console.WriteLine();
+                Console.WriteLine("Za udaljenu konekciju potrebno je:");
+                Console.WriteLine("1. Server mora imati konfigurisan port forwarding");
+                Console.WriteLine("2. Portovi {0} (TCP) i {1} (UDP) moraju biti prosleđeni", TCP_PORT, UDP_PORT);
+                Console.WriteLine("3. Morate znati eksternu IP adresu servera");
+                Console.WriteLine();
+                Console.Write("Unesite eksternu IP adresu servera: ");
+                serverIP = Console.ReadLine().Trim();
+                
+                if (string.IsNullOrEmpty(serverIP))
+                {
+                    Console.WriteLine("Neispravna IP adresa, koristim lokalnu konekciju...");
+                    serverIP = "127.0.0.1";
+                }
+                else
+                {
+                    Console.WriteLine($"Pokušavam konekciju na {serverIP}:{TCP_PORT}");
+                }
+            }
+            else
+            {
+                serverIP = "127.0.0.1"; // Lokalna konekcija
+                Console.WriteLine("Koristim lokalnu konekciju...");
+            }
+            
+            Console.WriteLine();
+        }
+
         private void ConnectToServer()
         {
             try
             {
+                Console.WriteLine($"Povezujem se na {serverIP}:{TCP_PORT}...");
                 tcpClient = new TcpClient();
-                tcpClient.Connect(SERVER_IP, TCP_PORT);
+                
+                // Timeout za konekciju
+                var result = tcpClient.BeginConnect(serverIP, TCP_PORT, null, null);
+                var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(10));
+                
+                if (!success)
+                {
+                    throw new TimeoutException("Timeout konekcije - proverite da li je server pokrenut i dostupan");
+                }
+                
+                tcpClient.EndConnect(result);
                 isConnected = true;
-                serverEndPoint = new IPEndPoint(IPAddress.Parse(SERVER_IP), UDP_PORT);
+                serverEndPoint = new IPEndPoint(IPAddress.Parse(serverIP), UDP_PORT);
+                
+                Console.WriteLine("✓ TCP konekcija uspostavljena");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Neuspešno povezivanje sa serverom: {ex.Message}");
-                Console.WriteLine("Proverite da li je server pokrenut i dostupan.");
+                Console.WriteLine($"✗ Neuspešno povezivanje sa serverom: {ex.Message}");
+                Console.WriteLine();
+                Console.WriteLine("Mogući uzroci:");
+                Console.WriteLine("- Server nije pokrenut");
+                Console.WriteLine("- Neispravna IP adresa");
+                Console.WriteLine("- Port forwarding nije konfigurisan (za udaljenu konekciju)");
+                Console.WriteLine("- Firewall blokira konekciju");
+                Console.WriteLine("- Mreža nije dostupna");
                 throw;
             }
         }
@@ -89,34 +155,9 @@ namespace Player1
 
             try
             {
-                // Čitamo poruku za odabir moda (samo prvi igrač)
-                if (playerId == 1)
-                {
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    string modeMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine(modeMessage);
-
-                    // Pošaljemo odabir moda
-                    Console.Write("Vaš izbor: ");
-                    string modeChoice = Console.ReadLine();
-                    byte[] data = Encoding.UTF8.GetBytes(modeChoice);
-                    stream.Write(data, 0, data.Length);
-
-                    // Čitamo poruku za target score
-                    bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    string scoreMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine(scoreMessage);
-
-                    // Pošaljemo target score
-                    Console.Write("Vaš izbor: ");
-                    string scoreChoice = Console.ReadLine();
-                    data = Encoding.UTF8.GetBytes(scoreChoice);
-                    stream.Write(data, 0, data.Length);
-                }
-
-                // Čitamo poruku za ime
-                int bytesRead2 = stream.Read(buffer, 0, buffer.Length);
-                string nameMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead2);
+                // Čitamo poruku za ime (Player 2 ne odabira mod)
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                string nameMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                 Console.WriteLine(nameMessage);
 
                 // Pošaljemo ime
@@ -149,6 +190,7 @@ namespace Player1
             {
                 // Kreiramo UDP klijent sa bilo kojim dostupnim portom
                 udpClient = new UdpClient(0); // 0 znači da OS automatski dodeljuje port
+                Console.WriteLine($"✓ UDP klijent pokrenut za komunikaciju sa {serverIP}:{UDP_PORT}");
             }
             catch (Exception ex)
             {
@@ -165,6 +207,7 @@ namespace Player1
             Console.WriteLine("║               IGRA POČINJE                  ║");
             Console.WriteLine("╚══════════════════════════════════════════════╝");
             Console.WriteLine();
+            Console.WriteLine($"Povezan na server: {serverIP}");
             Console.WriteLine("Kontrole:");
             Console.WriteLine("  A / ← - kretanje levo");
             Console.WriteLine("  D / → - kretanje desno");
@@ -193,6 +236,7 @@ namespace Player1
             Console.WriteLine("║              IGRA JE AKTIVNA                 ║");
             Console.WriteLine("╚══════════════════════════════════════════════╝");
             Console.WriteLine();
+            Console.WriteLine($"🌐 Server: {serverIP}:{TCP_PORT}/{UDP_PORT}");
             Console.WriteLine("🎮 Koristite kontrole za igranje:");
             Console.WriteLine("   A/D - kretanje levo/desno");
             Console.WriteLine("   SPACE - pucanje");
@@ -351,7 +395,7 @@ namespace Player1
         private void UpdateDisplay()
         {
             // Prikazujemo informacije o igraču u naslovnoj liniji
-            Console.Title = $"Space Invaders - Pozicija: ({playerX},{playerY}) | Skor: {score} | Životi: {lives}";
+            Console.Title = $"Space Invaders [{serverIP}] - Pozicija: ({playerX},{playerY}) | Skor: {score} | Životi: {lives}";
         }
 
         private void Cleanup()

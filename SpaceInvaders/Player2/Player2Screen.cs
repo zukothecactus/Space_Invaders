@@ -1,17 +1,17 @@
 ﻿using System;
 
-namespace Player1
+namespace Player2
 {
-    class Program
+    class Player2Screen
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("=== SPACE INVADERS - IGRAČ 1 ===");
+            Console.WriteLine("=== SPACE INVADERS - IGRAČ 2 ===");
             Console.WriteLine("Pokretanje klijenta...\n");
 
             try
             {
-                SpaceInvadersClient client = new SpaceInvadersClient(1);
+                SpaceInvadersClient client = new SpaceInvadersClient(2);
                 client.Start();
             }
             catch (Exception ex)
